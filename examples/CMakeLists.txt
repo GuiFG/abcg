@@ -1,4 +1,5 @@
 # add_subdirectory(helloworld)
 # add_subdirectory(firstapp)
 # add_subdirectory(tictactoe)
-add_subdirectory(sierpinski)
+# add_subdirectory(sierpinski)
+add_subdirectory(coloredtriangles)
