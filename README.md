@@ -10,7 +10,7 @@ A aplicação consiste em replicar o jogo *Connect 4*, em que é jogado por duas
 
 ## Implementação
 
-O diretório do projeto ```abcg/examples/connect4``` terá a seguinte estrutura:
+O diretório do projeto ```abcg/examples/connect4``` possui a seguinte estrutura:
 
 ```
 connect4
@@ -44,7 +44,7 @@ O subdiretório ```assets``` contém os seguintes arquivos:
 
 #### Código
 
-Foram utilizados 3 objetos (VBOs de posições e cor) para formar as *peças* do jogo. Um para o círculo vazio, outro para o círculo vermelho e outro para o círculo amarelo. A cada atualização do quadro na tela, é atualizado as posições dos objetos de acordo com o estado do tabuleiro.
+Foram utilizados 3 objetos (VBOs de posições e cores) para formar as *peças* do jogo. Um para o círculo vazio, outro para o círculo vermelho e outro para o círculo amarelo. A cada atualização do quadro na tela, é atualizado as posições dos objetos de acordo com o estado do tabuleiro.
 
 A configuração do jogo está definida no arquivo ```gamedata.hpp```:
 
