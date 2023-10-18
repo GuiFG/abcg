@@ -2,6 +2,7 @@
 #include "gamedata.hpp"
 #include "imgui.h"
 #include <glm/fwd.hpp>
+#include <gsl/gsl_util>
 
 void Window::onEvent(SDL_Event const &event) {
     // Mouse events
@@ -33,6 +34,8 @@ void Window::onCreate() {
                                   .stage = abcg::ShaderStage::Vertex},
                                  {.source = assetsPath + "circle.frag",
                                   .stage = abcg::ShaderStage::Fragment}});
+    
+    setupModel();
 }
 
 void Window::onUpdate() {
@@ -41,12 +44,13 @@ void Window::onUpdate() {
     if (m_gameData.m_state == State::Draw ||
         m_gameData.m_state == State::YellowWin || 
         m_gameData.m_state == State::RedWin) {
-            if (m_restartWaitTimer.elapsed() > 5) restart();
+            if (m_restartWaitTimer.elapsed() > 5) 
+                restart();
         return;
     }
 
     if (m_gameData.m_state == State::CircleDrop) {
-        auto const idxCol = (int) (m_mousePosition.x / ((float) m_viewportSize.x / m_gameData.m_boardWidth));
+        auto const idxCol = gsl::narrow_cast<int>((m_mousePosition.x / (gsl::narrow_cast<float>(m_viewportSize.x) / m_gameData.m_boardWidth) ) );
         auto const idxRow = getNextRowBoard(idxCol);
 
         if (idxRow >= 0) {
@@ -88,8 +92,6 @@ void Window::onUpdate() {
 void Window::onPaint() {
     abcg::glClearColor(0, 0, 255, 1);
     abcg::glClear(GL_COLOR_BUFFER_BIT);
-
-    setupModel();
 
     abcg::glViewport(0, 0, m_viewportSize.x, m_viewportSize.y);
 
@@ -149,7 +151,7 @@ void Window::setupModel() {
 
 void Window::onResize(glm::ivec2 const &size) {
     m_viewportSize = size;
-    m_scale = (float) (0.9f * m_viewportSize.x / m_gameData.m_boardWidth) / m_viewportSize.x;
+    m_scale = (0.9f * m_viewportSize.x / m_gameData.m_boardWidth) / m_viewportSize.x;
 
     abcg::glClear(GL_COLOR_BUFFER_BIT);
 }
@@ -164,9 +166,8 @@ void Window::onDestroy() {
 glm::vec2 Window::getMousePositionViewPort() {
     glm::vec2 mousePosition;
 
-    mousePosition.x = ((float) m_mousePosition.x / m_viewportSize.x) * 2 - 1;
+    mousePosition.x = (gsl::narrow_cast<float>(m_mousePosition.x) / m_viewportSize.x) * 2 - 1;
     mousePosition.y = 1 - m_scale;
-
     return mousePosition;
 }
 
