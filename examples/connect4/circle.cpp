@@ -115,8 +115,7 @@ void Circle::update(
             m_translation.y -= scale * deltaTime * 20;
         } else {
             m_translation.y = 1 - scale;
-        }
-        
+        }   
     }
 }
 

@@ -116,7 +116,6 @@ void Window::onPaint() {
         m_circleYellow.paint(m_scale);
 }
 
-
 void Window::onPaintUI() {
     auto const size{ImVec2(350, 85)};
     auto const position{ImVec2((m_viewportSize.x - size.x) / 2.0f,
