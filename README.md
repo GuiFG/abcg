@@ -1,165 +1,113 @@
-# ATIVIDADE 01 - Aplicação interativa com gráficos 2D
+# ABCg
 
-**Nome**: Guilherme Ferreira Galdino
-**RA**: 11201811063
+![build workflow](https://github.com/hbatagelo/abcg/actions/workflows/build.yml/badge.svg)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/hbatagelo/abcg)](https://github.com/hbatagelo/abcg/releases/latest)
 
+Development framework accompanying the course [MCTA008-17 Computer Graphics](http://professor.ufabc.edu.br/~harlen.batagelo/cg/) at [UFABC](https://www.ufabc.edu.br/).
 
-## Descrição
+[Documentation](https://hbatagelo.github.io/abcg/abcg/doc/html/) | [Release notes](CHANGELOG.md)
 
-A aplicação consiste em replicar o jogo *Connect 4*, em que é jogado por duas pessoas utilizando um tabuleiro com 6 linhas e 7 colunas. O objetivo do jogo é conectar quatro peças em sequência, seja na vertical, horizontal ou diagonal. Os jogadores se revezam colocando uma peça de sua cor em uma das colunas do tabuleiro. A peça cai para o espaço mais baixo disponível na coluna escolhida, semelhante ao tabuleiro real. Se todas as colunas estiverem cheias e nenhum jogador conseguir formar uma conexão de quatro peças, o jogo é considerado um empate.
+ABCg is a lightweight C++ framework that simplifies the development of 3D graphics applications based on [OpenGL](https://www.opengl.org), [OpenGL ES](https://www.khronos.org), [WebGL](https://www.khronos.org/webgl/), and [Vulkan](https://www.vulkan.org). It is designed for the tutorials and assignments of the course "MCTA008-17 Computer Graphics" taught at Federal University of ABC (UFABC).
 
-## Implementação
+***
 
-O diretório do projeto ```abcg/examples/connect4``` possui a seguinte estrutura:
+## Main features
 
-```
-connect4
-│   circle.cpp
-|   circle.hpp
-|   CMakeLists.txt
-|   gamedata.hpp
-|   main.cpp
-|   window.cpp
-|   window.hpp
-│
-└───assets
-    │   circle.frag
-    │   circle.vert
-    └   Inconsolata-Medium.ttf
+*   Supported platforms: Linux, macOS, Windows, WebAssembly.
+*   Supported backends: OpenGL 3.3+, OpenGL ES 3.0+, WebGL 2.0 (via Emscripten), Vulkan 1.3.
+*   Applications that use the common subset of functions between OpenGL 3.3 and OpenGL ES 3.0 can be built for WebGL 2.0 using the same source code.
+*   OpenGL functions can be qualified with the `abcg::` namespace to enable throwing exceptions with descriptive GL error messages that include the source code location.
+*   Includes helper classes and functions for loading textures (using [SDL\_image](https://www.libsdl.org/projects/SDL_image/)), loading OBJ 3D models (using [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader)), and compiling GLSL shaders to SPIR-V with [glslang](https://github.com/KhronosGroup/glslang).
 
-```
+***
 
-* ```circle.cpp``` e ```circle.hpp```: Código fonte responsável pelas *peças* (círculos) do jogo.
+## Requirements
 
-* ```gamedata.hpp```: Configuração do jogo, como tamanho do tabuleiro e estados jogo.
+The following minimum requirements are shared among all platforms:
 
-* ```window.cpp``` e ```window.hpp```: Código responsável pela atualizações na tela e iterativdade.
+*   [CMake](https://cmake.org/) 3.21.
+*   A C++ compiler with at least partial support for C++20 (tested with GCC 12, Clang 16, MSVC 17, and emcc 3.1.42).
+*   A system with support for OpenGL 3.3 (OpenGL backend) or Vulkan 1.3 (Vulkan backend). Conformant software rasterizers such as Mesa's [Gallium llvmpipe](https://docs.mesa3d.org/drivers/llvmpipe.html) and lavapipe (post Jun 2022) are supported. Mesa's [D3D12](https://devblogs.microsoft.com/directx/directx-heart-linux/) backend on [WSL 2.0](https://docs.microsoft.com/en-us/windows/wsl/install) is supported as well.
 
-* ```main.cpp```: Responsável pela execução da aplicação e tratamento de erro.
+For WebAssembly:
 
-O subdiretório ```assets``` contém os seguintes arquivos:
+*   [Emscripten](https://emscripten.org/).
+*   A browser with support for WebGL 2.0.
 
-* ```Inconsolata-Medium.ttf```: fonte Inconsolata utilizada na mensagem “Red Wins!”, "YellowWins" e "Draw".
-* ```circle.vert``` e ```circle.frag```: código-fonte do vertex shader e fragment shader utilizados para renderizar os círculos.
+For building desktop applications:
 
-#### Código
+*   [SDL](https://www.libsdl.org/) 2.0.
+*   [SDL\_image](https://www.libsdl.org/projects/SDL_image/) 2.0.
+*   [GLEW](http://glew.sourceforge.net/) 2.2.0 (required for OpenGL-based applications).
+*   [Vulkan](https://www.lunarg.com/vulkan-sdk/) 1.3 (required for Vulkan-based applications).
 
-Foram utilizados 3 objetos (VBOs de posições e cores) para formar as *peças* do jogo. Um para o círculo vazio, outro para o círculo vermelho e outro para o círculo amarelo. A cada atualização do quadro na tela, é atualizado as posições dos objetos de acordo com o estado do tabuleiro.
+Desktop dependencies can be resolved automatically with [Conan](https://conan.io/), but it is disabled by default. To use Conan, install Conan 1.47 or a later 1.\* version (ABCg is not compatible with Conan 2.0!) and then configure CMake with `-DENABLE_CONAN=ON`.
 
-A configuração do jogo está definida no arquivo ```gamedata.hpp```:
+The default renderer backend is OpenGL (CMake option `GRAPHICS_API=OpenGL`). To use the Vulkan backend, configure CMake with `-DGRAPHICS_API=Vulkan`.
 
-```cpp
-enum class State { RedTurn, YellowTurn, RedWin, YellowWin, Draw, CircleDrop, CircleDropping, CircleDropped };
+***
 
-struct GameData {
-  bool m_RedTurn{true};
-  static int const m_N{4};
-  static int const m_boardWidth{7}; 
-  static int const m_boardHeigth{6};
-  std::array<char, m_boardWidth * m_boardHeigth> m_board{}; // '\0', 'R' or 'Y'
-  State m_state{State::RedTurn};
+## Installation and usage
 
-  std::array<int, 2> m_lastIndex {0, 0};
-};
-```
+Start by cloning the repository:
 
-Aqui são definidos os estados o jogo.
+    # Get abcg repo
+    git clone https://github.com/hbatagelo/abcg.git
 
-1. ```RedTurn```: Estado que a vez da jogada é do jogador com a peça (círculo) vermelho.
+    # Enter the directory
+    cd abcg
 
-2. ```YellowTurn```: Estado que a vez da jogada é do jogador com a peça (círculo) amarelo.
+Follow the instructions below to build the "Hello, World!" sample located in `abcg/examples/helloworld`.
 
-3. ```RedWin```: Estado que indica que o jogador vermelho venceu.
+### Windows
 
-4. ```YellowWin```: Estado que indica que o jogador amarelho venceu.
+*   Run `build-vs.bat` for building with the Visual Studio 2022 toolchain.
+*   Run `build.bat` for building with GCC (MinGW-w64).
 
-5. ```Draw```: Estado que mostra empate da partida.
+`build-vs.bat` and `build.bat` accept two optional arguments: (1) the build type, which is `Release` by default, and (2) an extra CMake option. For example, for a `Debug` build with `-DENABLE_CONAN=ON` using VS 2022, run
 
-6. ```CircleDrop```: Estado que ativa a animação de queda da peça.
+    build-vs.bat Debug -DENABLE_CONAN=ON
 
-7. ```CircleDropping```: Estado indicando o momento em que a peça está caindo.
+### Linux and macOS
 
-8. ```CircleDropped```: Estado que indica o momento que a peça atingiu a posição estipulada.
+Run `./build.sh`.
 
-Na sequência é definido a estrutura dos dados do jogo. Nela temos:
-* A quantidade de linhas e colunas no tabuleiro. 
-* A sequência de símbolos representando o estado do tabuleiro. 
-* A quantidade de sequência de peças que são necessárias para se linhar (no caso são 4 peças). 
-* Uma variável (m_lastIndex) que armazena o indíce no tabuleiro estipulado para a peça no momento do clique, por conta dos estados de queda da peça (CircleDrop, CircleDropping e CircleDropped).
+The script accepts two optional arguments: (1) the build type, which is `Release` by default, and (2) an extra CMake option. For example, for a `Debug` build with `-DENABLE_CONAN=ON`, run
 
-As funções definidas em ```circle``` são:
+    ./build.sh Debug -DENABLE_CONAN=ON
 
-```cpp
-void create(GLuint program, glm::vec4 color);
-void update(const GameData &gameData, const glm::vec2 &mousePosition, float scale, float DeltaTime);
-void paint(glm::vec2 translation, float scale);
-void paint(float scale);
-void destroy();
-bool isDropping();
-```
+### WebAssembly
 
-* ```create```: Cria o VBO de posição e de cor responsável por formar uma polígono regular de 100 lados, obtendo uma forma semelhante ao um círculo. Cria o VAO passando o VBO para o vertex shader.
+1.  Run `build-wasm.bat` (Windows) or `./build-wasm.sh` (Linux/macOS).
+2.  Run `runweb.bat` (Windows) or `./runweb.sh` (Linux/macOS) for setting up a local web server.
+3.  Open <http://localhost:8080/helloworld.html>.
 
-* ```update```: Atuliza a posição do VBO de acordo com o estado atual do jogo. 
+***
 
-* ```paint```: Duas funções para desenhar o VBO na tela. Uma especificando a posição exata e outra obtendo a posição atualizada na função update. São utilizadas variáveis uniformes para alterar os pontos do VBO tanto na escala quanto na translação.
+## Docker setup
 
-* ```destroy```: Deleta os VBOS e o VAO do buffer.
+ABCg can be built in a [Docker](https://www.docker.com/) container. The Dockerfile provided is based on Ubuntu 22.04 and includes Emscripten.
 
-* ```isDropping```: Função para verificar a posição vertical durante o estado *CircleDropping* do círculo. Caso ultrapasse a posição estipulada do círculo no tabuleiro, a função retorna falso, indicando o fim da queda.
+1.  Create the Docker image (`abcg`):
 
+        sudo docker build -t abcg .
 
-As funções definidas em ```window``` são:
-```cpp
-void onEvent(SDL_Event const &event) override;
-void onCreate() override;
-void onUpdate() override;
-void onPaint() override;
-void onPaintUI() override;
-void onResize(glm::ivec2 const &size) override;
-void onDestroy() override;
-```
+2.  Create the container (`abcg_container`):
 
-* ```onEvent```: Captura os cliques do jogador feito na tela, alterando para o estado de *peça* caindo (CircleDrop).
+        sudo docker create -it \
+          -p 8080:8080 \
+          -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+          -e DISPLAY \
+          --name abcg_container abcg
 
-* ```onCreate```: Inicializa fonte *Inconsolata*, shader e os 3 VBOs (círculos).
+3.  Start the container:
 
-* ```onUpdate```: Obtém os valores da posição da peça atual para atualizar a iterativadade do mouse com o círculo. Obtém a posição do clique e qual parte do tabuleiro a peça terá que ir. Altera o estado para *CircleDropping* permitindo a animação da gravidade da peça. Verifica a condição final do jogo, após a peça chegar na posição atribuída. Caso jogo esteja finalizado, espera 5 segundos para reiniciar a partida.
+        sudo docker start -ai abcg_container
 
-* ```onPaint```: Limpa a tela pintando o fundo de azul (cor do tabuleiro). Desenha os círculos conforme o estado atual do tabuleiro. Desenho o círculo do jogador atual na parte superior da tela.
+    On NVIDIA GPUs, install the [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker) to allow the container to use the host's NVIDIA driver and X server. Expose the X server with `sudo xhost +local:root` before starting the container.
 
-* ```onPaintUI```: No final da partida, mostra um texto no centro da tela indicando o jogador vencedor ou um empate.
+***
 
-* ```onResize``` e ```onDestroy```: onResize atualiza o tamanho do viewPort caso a janela seja redimensionada. E onDestroy, apaga os VBOs, VAO e o program da memória.
+## License
 
-Além dessas, foram definidas as seguintes funções:
-
-```cpp
-void setupModel();
-glm::vec2 getMousePositionViewPort();
-glm::vec2 getCirclePositionViewPort(glm::vec2 index);
-int getNextRowBoard(int col);
-void checkEndCondition();
-void restart();
-```
-
-
-* ```setupModel```: Cria os três círculos que serão utilizados no jogo, um de cada cor (branco, vermelho e amarelo), da classe ```circle.hpp```.
-
-* ```getMousePositionViewPort```: Converte a posição do mouse no momento de um clique para a posição nas coordenadas do gsl [-1, 1].
-
-* ```getCirclePositionViewPort```: Converte um indíce do tabuleiro (matriz) para um valor no sistema de coordenadas do gsl [-1, 1].
-
-* ```getNextRowBoard```: Obtém o indíce disponível da linha do tabuleiro em uma dada coluna.
-
-* ```checkEndCondition```: Verifica a condição do jogo. Faz uma varredura no tabuleiro, tanto horizontal, vertical e na diagonal. Para cada varredura, busca sequência de 4 caracteres. Caso sejam iguais, tem-se um vencedor. Caso contrário e não tem mais posições vazia, altera o estado do jogo para empate (Draw).
- 
-* ```restart```: Retorna o estado do jogo para o início e atualiza o tabuleiro preenchendo todas as posições como vazio.
-
-
-
-
-
-
-
-
+ABCg is licensed under the MIT License. See [LICENSE](https://github.com/hbatagelo/abcg/blob/main/LICENSE) for more information.

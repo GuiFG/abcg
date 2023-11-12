@@ -4,6 +4,7 @@
 #include "abcgOpenGL.hpp"
 #include "sphere.hpp"
 #include "camera.hpp"
+#include <array>
 #include <random>
 
 class Window : public abcg::OpenGLWindow {
@@ -20,9 +21,7 @@ private:
   std::default_random_engine m_randomEngine;
   glm::ivec2 m_viewportSize{};
 
-  int m_trianglesToDraw{};
-
-  Sphere earth, moon;
+  Sphere m_model;
 
   glm::vec3 m_rotationAxis{1.0f, 1.0f, 0.0f};
   float m_angle{};
@@ -36,6 +35,9 @@ private:
   float m_rotation_speed{1.0f};
   float m_translation_speed{2.0f};
   float m_speed_x{0.5f};
+
+  std::array<Sphere, 6> m_spheres;
+  
 
   GLuint m_program{};
 };

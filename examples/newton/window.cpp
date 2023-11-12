@@ -50,7 +50,7 @@ void Window::onEvent(SDL_Event const &event) {
       m_truckSpeed = 0.0f;
   }
 
-   if (event.type == SDL_KEYUP) {
+  if (event.type == SDL_KEYUP) {
     if ((event.key.keysym.sym == SDLK_UP) && m_pedestalSpeed > 0)
       m_pedestalSpeed = 0.0f;
     if ((event.key.keysym.sym == SDLK_DOWN) && m_pedestalSpeed < 0)
@@ -86,31 +86,51 @@ void Window::onCreate() {
                                  {.source = assetsPath + "sphere.frag",
                                   .stage = abcg::ShaderStage::Fragment}});
 
-  earth.satellite_of = nullptr;
-  earth.mass = 100.0f;
-  earth.color = {0.0f, 0.0f, 1.0f, 1.0f};
-  earth.loadObj(assetsPath + "sphere.obj", m_program);
-  
-  moon.satellite_of = &earth;
-  moon.orbit_radius = 2.0f;
-  moon.scale = 0.3f;
-  moon.loadObj(assetsPath + "sphere.obj", m_program);
+  int i = 0;
+  for (auto &sphere : m_spheres) {
+    if (i == 0) {
+      sphere.satellite_of = nullptr;
+      sphere.color = {0.0f, 0.0f, 1.0f, 1.0f};
+    } else {
+      sphere.satellite_of = &m_spheres[0];
+      sphere.scale = 0.3f;
+    }
 
-  m_trianglesToDraw = earth.getNumTriangles();
+    std::uniform_real_distribution rd(-0.0f, 1.0f);
+    sphere.color = {rd(m_randomEngine), rd(m_randomEngine), rd(m_randomEngine),
+                    rd(m_randomEngine)};
+
+    std::uniform_real_distribution<float> distRadius(1.0f, 5.0f);
+    sphere.orbit_radius = distRadius(m_randomEngine);
+
+    sphere.z_index = sphere.orbit_radius > 3.0f;
+
+    std::uniform_real_distribution<float> distTrans(0.1f, 1.0f);
+    sphere.translation_reduce = distTrans(m_randomEngine);
+
+    if (sphere.satellite_of) {
+      sphere.position = sphere.satellite_of->position +
+                        glm::vec3{sphere.orbit_radius, 0.0f, 0.0f};
+    }
+
+    i += 1;
+  }
+
+  m_model.loadObj(assetsPath + "sphere.obj", m_program);
 }
-
 void Window::onUpdate() {
   auto const deltaTime{gsl::narrow_cast<float>(getDeltaTime())};
 
-  earth.update(m_rotation_speed * deltaTime, m_translation_speed * deltaTime);
-  moon.update(m_rotation_speed * deltaTime, m_translation_speed * deltaTime);
+  for (auto &sphere : m_spheres) {
+    sphere.update(m_rotation_speed * deltaTime,
+                  m_translation_speed * deltaTime);
+  }
+
   // Update LookAt camera
   m_camera.dolly(m_dollySpeed * deltaTime);
   m_camera.truck(m_truckSpeed * deltaTime);
   m_camera.pan(m_panSpeed * deltaTime);
   m_camera.pedestal(m_pedestalSpeed * deltaTime);
-
-  moon.speed_x = m_speed_x;
 }
 
 void Window::onPaint() {
@@ -131,8 +151,9 @@ void Window::onPaint() {
   abcg::glUniformMatrix4fv(projMatrixLoc, 1, GL_FALSE,
                            &m_camera.getProjMatrix()[0][0]);
 
-  earth.render();
-  moon.render();
+  for (auto &sphere : m_spheres) {
+    m_model.render(sphere.getModelMatrix(), sphere.color);
+  }
 
   abcg::glUseProgram(0);
 }
@@ -148,7 +169,7 @@ void Window::onPaintUI() {
   {
     ImGui::PushItemWidth(-1);
     ImGui::PushID(1);
-    ImGui::SliderFloat("", &m_translation_speed, 0.0f, 20.0f,
+    ImGui::SliderFloat("", &m_translation_speed, 0.0f, 40.0f,
                        "%.1fx Vel. Translação");
     ImGui::PopID();
     ImGui::PopItemWidth();
@@ -163,7 +184,6 @@ void Window::onResize(glm::ivec2 const &size) {
 }
 
 void Window::onDestroy() {
-  earth.destroy();
-  moon.destroy();
+  m_model.destroy();
   abcg::glDeleteProgram(m_program);
 }

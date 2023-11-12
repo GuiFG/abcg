@@ -12,13 +12,17 @@ struct Vertex {
 class Sphere {
 public:
   void loadObj(std::string_view path, GLuint program, bool standardize = true);
-  void render() const;
+  void render(glm::mat4 modelMatrix, glm::vec4 pColor) const;
   void destroy() const;
   void update(float rot_speed, float trans_speed);
   void computeModelMatrix();
 
   [[nodiscard]] int getNumTriangles() const {
     return gsl::narrow<int>(m_indices.size()) / 3;
+  }
+
+  [[nodiscard]] glm::mat4 getModelMatrix() const {
+    return m_modelMatrix;
   }
 
   Sphere *satellite_of;
@@ -28,6 +32,8 @@ public:
   float speed_x{0.5f};
   glm::vec3 position{0.0f};
   glm::vec4 color{1.0f};
+  bool z_index = true;
+  float translation_reduce;
 
 private:
   GLuint m_VAO{};
