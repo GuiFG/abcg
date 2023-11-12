@@ -1,5 +1,8 @@
 #include "sphere.hpp"
 
+#include <cmath>
+#include <glm/ext/quaternion_geometric.hpp>
+#include <glm/fwd.hpp>
 #include <unordered_map>
 
 // Explicit specialization of std::hash for Vertex
@@ -92,6 +95,10 @@ void Sphere::loadObj(std::string_view path, GLuint program, bool standardize) {
 
   createBuffers(program);
   setupVAO(program);
+
+  if (satellite_of) {
+    position = satellite_of->position + glm::vec3{orbit_radius, 0.0f, 0.0f};
+  }
 }
 
 void Sphere::setupVAO(GLuint program) {
@@ -122,7 +129,7 @@ void Sphere::setupVAO(GLuint program) {
 
 void Sphere::render() const {
   abcg::glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &m_modelMatrix[0][0]);
-  abcg::glUniform4fv(m_colorLoc, 1, &m_color[0]);
+  abcg::glUniform4fv(m_colorLoc, 1, &color[0]);
 
   abcg::glBindVertexArray(m_VAO);
 
@@ -154,22 +161,52 @@ void Sphere::standardize() {
 
 void Sphere::update(float rot_speed, float trans_speed) {
   if (satellite_of) {
-    // translation
-    auto angle = 5.0f * m_translation_speed * trans_speed;
+    auto angle = m_translation_speed * trans_speed;
     m_translation_angle += angle;
     position.x =
-        satellite_of->position.x + cos(m_translation_angle) * m_orbit_radius;
+        satellite_of->position.x + cos(m_translation_angle) * orbit_radius;
     position.z =
-        satellite_of->position.z - sin(m_translation_angle) * m_orbit_radius;
-
-    m_orbit.update(satellite_of->position);
+        satellite_of->position.z - sin(m_translation_angle) * orbit_radius;
   }
 
   // rotation
-  auto angle = 5.0f * m_rotation_speed * rot_speed;
+  auto angle = m_rotation_speed * rot_speed;
   m_rotation_angle += angle;
 
   computeModelMatrix();
+}
+
+void Sphere::updateSpeed() {
+  const double constante_gravitacional = 0.0005;
+  m_distance = getDistance(position.x, position.y, satellite_of->position.x,
+                               satellite_of->position.y);
+  if (m_distance < 1) {
+    m_distance = 1;
+  }
+
+  auto produtoMassas = satellite_of->mass * mass;
+  auto produtoDistancia = m_distance * m_distance;
+
+  auto forcaGravitacional =
+      constante_gravitacional * produtoMassas / produtoDistancia;
+
+  auto cos = (satellite_of->position.x - position.x) / m_distance;
+  auto sin = (satellite_of->position.y - position.y) / m_distance;
+
+  glm::vec2 forca;
+  forca.x = forcaGravitacional * cos;
+  forca.y = forcaGravitacional * sin;
+
+  glm::vec2 aceleracao;
+  aceleracao.x = forca.x / mass;
+  aceleracao.y = forca.y / mass;
+
+  m_speed.x = m_speed.x + aceleracao.x;
+  m_speed.y = m_speed.y + aceleracao.y;
+}
+
+float Sphere::getDistance(float x1, float y1, float x2, float y2) {
+  return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 }
 
 void Sphere::computeModelMatrix() {

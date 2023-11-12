@@ -22,7 +22,7 @@ private:
 
   int m_trianglesToDraw{};
 
-  Sphere earth;
+  Sphere earth, moon;
 
   glm::vec3 m_rotationAxis{1.0f, 1.0f, 0.0f};
   float m_angle{};
@@ -31,9 +31,11 @@ private:
   float m_dollySpeed{};
   float m_truckSpeed{};
   float m_panSpeed{};
+  float m_pedestalSpeed{};
 
   float m_rotation_speed{1.0f};
-  float m_translation_speed{1.0f};
+  float m_translation_speed{2.0f};
+  float m_speed_x{0.5f};
 
   GLuint m_program{};
 };

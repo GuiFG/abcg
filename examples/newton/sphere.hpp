@@ -2,7 +2,6 @@
 #define SPHERE_HPP_
 
 #include "abcgOpenGL.hpp"
-#include "orbit.hpp"
 
 struct Vertex {
   glm::vec3 position{};
@@ -23,6 +22,12 @@ public:
   }
 
   Sphere *satellite_of;
+  float scale{1.0f};
+  float orbit_radius{};
+  float mass{1.0f};
+  float speed_x{0.5f};
+  glm::vec3 position{0.0f};
+  glm::vec4 color{1.0f};
 
 private:
   GLuint m_VAO{};
@@ -32,26 +37,25 @@ private:
   std::vector<Vertex> m_vertices;
   std::vector<GLuint> m_indices;
 
-  float scale{1.0f};
-
-  Orbit m_orbit;
-
-  glm::vec3 position{0.0f};
-  float m_orbit_radius{};
   float m_translation_angle{0.0f};
-  float m_translation_speed{0.0f};
+  float m_translation_speed{0.1f};
   float m_rotation_angle{0.0f};
   float m_rotation_speed{1.0f};
-  glm::vec4 m_color{1.0f};
+  glm::vec2 m_speed{0.5f, 0.0f};
 
   glm::mat4 m_modelMatrix{1.0f};
 
   GLint m_modelMatrixLoc{};
   GLint m_colorLoc{};
 
+  bool m_collision {false};
+  float m_distance {0.0f};
+
   void createBuffers(GLuint program);
   void setupVAO(GLuint program);
   void standardize();
+  void updateSpeed();
+  float getDistance(float x1, float y1, float x2, float y2);
 };
 
 #endif

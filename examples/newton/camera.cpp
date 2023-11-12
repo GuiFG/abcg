@@ -52,7 +52,7 @@ void Camera::mouseScroll(float scroll) {
 void Camera::computeProjectionMatrix(glm::vec2 const &size) {
   m_projMatrix = glm::mat4(1.0f);
   auto const aspect{size.x / size.y};
-  m_projMatrix = glm::perspective(glm::radians(70.0f), aspect, 0.1f, 5.0f);
+  m_projMatrix = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
 }
 
 glm::vec3 Camera::project(glm::vec2 const &position) const {
@@ -111,6 +111,18 @@ void Camera::pan(float speed) {
   transform = glm::translate(transform, -m_eye);
 
   m_at = transform * glm::vec4(m_at, 1.0f);
+
+  computeViewMatrix();
+}
+
+void Camera::pedestal(float speed) {
+  // Moves the camera vertically
+  // Compute up vector
+  auto const up{glm::normalize(m_up)};
+
+  // Move eye and center upward (speed > 0) or downward (speed < 0)
+  m_eye += up * speed;
+  m_at += up * speed;
 
   computeViewMatrix();
 }
