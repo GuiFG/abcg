@@ -1,4 +1,4 @@
-#include "model.hpp"
+#include "sphere.hpp"
 
 #include <unordered_map>
 
@@ -10,7 +10,7 @@ template <> struct std::hash<Vertex> {
   }
 };
 
-void Model::createBuffers() {
+void Sphere::createBuffers(GLuint program) {
   // Delete previous buffers
   abcg::glDeleteBuffers(1, &m_EBO);
   abcg::glDeleteBuffers(1, &m_VBO);
@@ -30,17 +30,20 @@ void Model::createBuffers() {
                      sizeof(m_indices.at(0)) * m_indices.size(),
                      m_indices.data(), GL_STATIC_DRAW);
   abcg::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+  m_modelMatrixLoc = abcg::glGetUniformLocation(program, "modelMatrix");
+  m_colorLoc = abcg::glGetUniformLocation(program, "color");
 }
 
-void Model::loadObj(std::string_view path, bool standardize) {
+void Sphere::loadObj(std::string_view path, GLuint program, bool standardize) {
   tinyobj::ObjReader reader;
 
   if (!reader.ParseFromFile(path.data())) {
     if (!reader.Error().empty()) {
       throw abcg::RuntimeError(
-          fmt::format("Failed to load model {} ({})", path, reader.Error()));
+          fmt::format("Failed to load Sphere {} ({})", path, reader.Error()));
     }
-    throw abcg::RuntimeError(fmt::format("Failed to load model {}", path));
+    throw abcg::RuntimeError(fmt::format("Failed to load Sphere {}", path));
   }
 
   if (!reader.Warning().empty()) {
@@ -84,24 +87,14 @@ void Model::loadObj(std::string_view path, bool standardize) {
   }
 
   if (standardize) {
-    Model::standardize();
+    Sphere::standardize();
   }
 
-  createBuffers();
+  createBuffers(program);
+  setupVAO(program);
 }
 
-void Model::render(int numTriangles) const {
-  abcg::glBindVertexArray(m_VAO);
-
-  auto const numIndices{(numTriangles < 0) ? m_indices.size()
-                                           : numTriangles * 3};
-
-  abcg::glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, nullptr);
-
-  abcg::glBindVertexArray(0);
-}
-
-void Model::setupVAO(GLuint program) {
+void Sphere::setupVAO(GLuint program) {
   // Release previous VAO
   abcg::glDeleteVertexArrays(1, &m_VAO);
 
@@ -127,7 +120,20 @@ void Model::setupVAO(GLuint program) {
   abcg::glBindVertexArray(0);
 }
 
-void Model::standardize() {
+void Sphere::render() const {
+  abcg::glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &m_modelMatrix[0][0]);
+  abcg::glUniform4fv(m_colorLoc, 1, &m_color[0]);
+
+  abcg::glBindVertexArray(m_VAO);
+
+  auto const numIndices{m_indices.size()};
+
+  abcg::glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, nullptr);
+
+  abcg::glBindVertexArray(0);
+}
+
+void Sphere::standardize() {
   // Center to origin and normalize largest bound to [-1, 1]
 
   // Get bounds
@@ -146,7 +152,35 @@ void Model::standardize() {
   }
 }
 
-void Model::destroy() const {
+void Sphere::update(float rot_speed, float trans_speed) {
+  if (satellite_of) {
+    // translation
+    auto angle = 5.0f * m_translation_speed * trans_speed;
+    m_translation_angle += angle;
+    position.x =
+        satellite_of->position.x + cos(m_translation_angle) * m_orbit_radius;
+    position.z =
+        satellite_of->position.z - sin(m_translation_angle) * m_orbit_radius;
+
+    m_orbit.update(satellite_of->position);
+  }
+
+  // rotation
+  auto angle = 5.0f * m_rotation_speed * rot_speed;
+  m_rotation_angle += angle;
+
+  computeModelMatrix();
+}
+
+void Sphere::computeModelMatrix() {
+  m_modelMatrix = glm::mat4(1.0f);
+  m_modelMatrix = glm::translate(m_modelMatrix, position);
+  m_modelMatrix =
+      glm::rotate(m_modelMatrix, m_rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));
+  m_modelMatrix = glm::scale(m_modelMatrix, glm::vec3(scale));
+}
+
+void Sphere::destroy() const {
   abcg::glDeleteBuffers(1, &m_EBO);
   abcg::glDeleteBuffers(1, &m_VBO);
   abcg::glDeleteVertexArrays(1, &m_VAO);

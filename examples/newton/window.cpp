@@ -7,9 +7,53 @@ void Window::onEvent(SDL_Event const &event) {
   glm::ivec2 mousePosition;
   SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 
+  if (event.type == SDL_KEYDOWN) {
+    if (event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_w)
+      m_dollySpeed = 1.0f;
+    if (event.key.keysym.sym == SDLK_DOWN || event.key.keysym.sym == SDLK_s)
+      m_dollySpeed = -1.0f;
+    if (event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_a)
+      m_panSpeed = -1.0f;
+    if (event.key.keysym.sym == SDLK_RIGHT || event.key.keysym.sym == SDLK_d)
+      m_panSpeed = 1.0f;
+    if (event.key.keysym.sym == SDLK_q)
+      m_truckSpeed = -1.0f;
+    if (event.key.keysym.sym == SDLK_e)
+      m_truckSpeed = 1.0f;
+  }
+
+  if (event.type == SDL_KEYUP) {
+    if ((event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_w) &&
+        m_dollySpeed > 0)
+      m_dollySpeed = 0.0f;
+    if ((event.key.keysym.sym == SDLK_DOWN || event.key.keysym.sym == SDLK_s) &&
+        m_dollySpeed < 0)
+      m_dollySpeed = 0.0f;
+    if ((event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_a) &&
+        m_panSpeed < 0)
+      m_panSpeed = 0.0f;
+    if ((event.key.keysym.sym == SDLK_RIGHT ||
+         event.key.keysym.sym == SDLK_d) &&
+        m_panSpeed > 0)
+      m_panSpeed = 0.0f;
+    if (event.key.keysym.sym == SDLK_q && m_truckSpeed < 0)
+      m_truckSpeed = 0.0f;
+    if (event.key.keysym.sym == SDLK_e && m_truckSpeed > 0)
+      m_truckSpeed = 0.0f;
+  }
+
+  if (event.type == SDL_MOUSEMOTION) {
+    m_camera.mouseMove(mousePosition);
+  }
+  if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+    m_camera.mousePress(mousePosition);
+  }
+  if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
+    m_camera.mouseRelease(mousePosition);
+  }
+
   if (event.type == SDL_MOUSEWHEEL) {
-    m_zoom += (event.wheel.y > 0 ? -1.0f : 1.0f) / 5.0f;
-    m_zoom = glm::clamp(m_zoom, -1.5f, 2.0f);
+    m_camera.mouseScroll(event.wheel.preciseY);
   }
 }
 
@@ -25,85 +69,54 @@ void Window::onCreate() {
                                  {.source = assetsPath + "sphere.frag",
                                   .stage = abcg::ShaderStage::Fragment}});
 
-  m_model.loadObj(assetsPath + "sphere.obj");
-  m_model.setupVAO(m_program);
+  earth.loadObj(assetsPath + "sphere.obj", m_program);
+  earth.satellite_of = nullptr;
 
-  m_modelMatrix = glm::translate(m_modelMatrix, glm::vec3(0.0f, 0.0f, 0.0f));
-  m_modelMatrix = glm::scale(m_modelMatrix, glm::vec3(0.5f));
-
-  m_trianglesToDraw = m_model.getNumTriangles();
-
-  // Setup stars
-  for (auto &sphere : m_spheres) {
-    std::uniform_real_distribution<float> distPosXY(-1.0f, 1.0f);
-    std::uniform_real_distribution<float> distPosZ(-1.5f, 2.0f);
-    sphere.m_position =
-        glm::vec3(distPosXY(m_randomEngine), distPosXY(m_randomEngine),
-                  distPosZ(m_randomEngine));
-  }
+  m_trianglesToDraw = earth.getNumTriangles();
 }
 
 void Window::onUpdate() {
   auto const deltaTime{gsl::narrow_cast<float>(getDeltaTime())};
-  m_angle = glm::wrapAngle(glm::radians(30.0f) * deltaTime);
-  m_modelMatrix = glm::rotate(m_modelMatrix, m_angle, m_rotationAxis);
 
-  m_viewMatrix =
-      glm::lookAt(glm::vec3(0.0f, 0.0f, 2.0f + m_zoom),
-                  glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+  earth.update( m_rotation_speed * deltaTime, m_translation_speed * deltaTime);
+  // Update LookAt camera
+  m_camera.dolly(m_dollySpeed * deltaTime);
+  m_camera.truck(m_truckSpeed * deltaTime);
+  m_camera.pan(m_panSpeed * deltaTime);
 }
 
 void Window::onPaint() {
   abcg::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   abcg::glViewport(0, 0, m_viewportSize.x, m_viewportSize.y);
-  auto const aspect{gsl::narrow<float>(m_viewportSize.x) /
-                    gsl::narrow<float>(m_viewportSize.y)};
-  m_projMatrix = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 5.0f);
 
   abcg::glUseProgram(m_program);
 
   // Get location of uniform variables
   auto const viewMatrixLoc{abcg::glGetUniformLocation(m_program, "viewMatrix")};
   auto const projMatrixLoc{abcg::glGetUniformLocation(m_program, "projMatrix")};
-  auto const modelMatrixLoc{
-      abcg::glGetUniformLocation(m_program, "modelMatrix")};
-  auto const colorLoc{abcg::glGetUniformLocation(m_program, "color")};
 
-  // Set uniform variables that have the same value for every model
-  abcg::glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, &m_viewMatrix[0][0]);
-  abcg::glUniformMatrix4fv(projMatrixLoc, 1, GL_FALSE, &m_projMatrix[0][0]);
-
-  // Set uniform variables for the current model
-  abcg::glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, &m_modelMatrix[0][0]);
-  abcg::glUniform4f(colorLoc, 1.0f, 1.0f, 1.0f, 1.0f); // White
+  // Set uniform variables for viewMatrix and projMatrix
+  // These matrices are used for every scene object
+  abcg::glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE,
+                           &m_camera.getViewMatrix()[0][0]);
+  abcg::glUniformMatrix4fv(projMatrixLoc, 1, GL_FALSE,
+                           &m_camera.getProjMatrix()[0][0]);
 
   // render earth
-  m_model.render(m_trianglesToDraw);
-  
-  // Render each sphere
-  for (auto &sphere : m_spheres) {
-    // Compute model matrix of the current star
-    glm::mat4 modelMatrix{1.0f};
-    modelMatrix = glm::translate(modelMatrix, sphere.m_position);
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(0.2f));
-
-    abcg::glUniform4f(colorLoc, 1.0f, 1.0f, 1.0f, 1.0f); // White
-
-    // Set uniform variable
-    abcg::glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, &modelMatrix[0][0]);
-
-    m_model.render();
-  }
+  earth.render();
 
   abcg::glUseProgram(0);
 }
 
 void Window::onPaintUI() { abcg::OpenGLWindow::onPaintUI(); }
 
-void Window::onResize(glm::ivec2 const &size) { m_viewportSize = size; }
+void Window::onResize(glm::ivec2 const &size) {
+  m_viewportSize = size;
+  m_camera.computeProjectionMatrix(size);
+}
 
 void Window::onDestroy() {
-  m_model.destroy();
+  earth.destroy();
   abcg::glDeleteProgram(m_program);
 }

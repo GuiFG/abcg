@@ -2,7 +2,8 @@
 #define WINDOW_HPP_
 
 #include "abcgOpenGL.hpp"
-#include "model.hpp"
+#include "sphere.hpp"
+#include "camera.hpp"
 #include <random>
 
 class Window : public abcg::OpenGLWindow {
@@ -19,22 +20,20 @@ private:
   std::default_random_engine m_randomEngine;
   glm::ivec2 m_viewportSize{};
 
-  Model m_model;
   int m_trianglesToDraw{};
 
-  struct Sphere {
-    glm::vec3 m_position{};
-  };
-
-  std::array<Sphere, 1> m_spheres;
+  Sphere earth;
 
   glm::vec3 m_rotationAxis{1.0f, 1.0f, 0.0f};
   float m_angle{};
-  float m_zoom{1.0f};
 
-  glm::mat4 m_modelMatrix{1.0f};
-  glm::mat4 m_viewMatrix{1.0f};
-  glm::mat4 m_projMatrix{1.0f};
+  Camera m_camera;
+  float m_dollySpeed{};
+  float m_truckSpeed{};
+  float m_panSpeed{};
+
+  float m_rotation_speed{1.0f};
+  float m_translation_speed{1.0f};
 
   GLuint m_program{};
 };
