@@ -15,11 +15,6 @@ public:
   void render(glm::mat4 modelMatrix, glm::vec4 pColor) const;
   void destroy() const;
   void update(float rot_speed, float trans_speed);
-  void computeModelMatrix();
-
-  [[nodiscard]] int getNumTriangles() const {
-    return gsl::narrow<int>(m_indices.size()) / 3;
-  }
 
   [[nodiscard]] glm::mat4 getModelMatrix() const {
     return m_modelMatrix;
@@ -28,8 +23,6 @@ public:
   Sphere *satellite_of;
   float scale{1.0f};
   float orbit_radius{};
-  float mass{1.0f};
-  float speed_x{0.5f};
   glm::vec3 position{0.0f};
   glm::vec4 color{1.0f};
   bool z_index = true;
@@ -54,14 +47,10 @@ private:
   GLint m_modelMatrixLoc{};
   GLint m_colorLoc{};
 
-  bool m_collision {false};
-  float m_distance {0.0f};
-
+  void computeModelMatrix();
   void createBuffers(GLuint program);
   void setupVAO(GLuint program);
   void standardize();
-  void updateSpeed();
-  float getDistance(float x1, float y1, float x2, float y2);
 };
 
 #endif

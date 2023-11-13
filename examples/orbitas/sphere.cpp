@@ -178,10 +178,6 @@ void Sphere::update(float rot_speed, float trans_speed) {
   computeModelMatrix();
 }
 
-float Sphere::getDistance(float x1, float y1, float x2, float y2) {
-  return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
-}
-
 void Sphere::computeModelMatrix() {
   m_modelMatrix = glm::mat4(1.0f);
   m_modelMatrix = glm::translate(m_modelMatrix, position);

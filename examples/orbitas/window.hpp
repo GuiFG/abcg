@@ -23,18 +23,14 @@ private:
 
   Sphere m_model;
 
-  glm::vec3 m_rotationAxis{1.0f, 1.0f, 0.0f};
-  float m_angle{};
-
   Camera m_camera;
   float m_dollySpeed{};
   float m_truckSpeed{};
   float m_panSpeed{};
-  float m_pedestalSpeed{};
+  float m_verticalSpeed{};
 
   float m_rotation_speed{1.0f};
   float m_translation_speed{2.0f};
-  float m_speed_x{0.5f};
 
   std::array<Sphere, 6> m_spheres;
   

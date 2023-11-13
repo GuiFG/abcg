@@ -25,9 +25,9 @@ void Window::onEvent(SDL_Event const &event) {
 
   if (event.type == SDL_KEYDOWN) {
     if (event.key.keysym.sym == SDLK_UP)
-      m_pedestalSpeed = 1.0f;
+      m_verticalSpeed = 1.0f;
     if (event.key.keysym.sym == SDLK_DOWN)
-      m_pedestalSpeed = -1.0f;
+      m_verticalSpeed = -1.0f;
   }
 
   if (event.type == SDL_KEYUP) {
@@ -51,22 +51,10 @@ void Window::onEvent(SDL_Event const &event) {
   }
 
   if (event.type == SDL_KEYUP) {
-    if ((event.key.keysym.sym == SDLK_UP) && m_pedestalSpeed > 0)
-      m_pedestalSpeed = 0.0f;
-    if ((event.key.keysym.sym == SDLK_DOWN) && m_pedestalSpeed < 0)
-      m_pedestalSpeed = 0.0f;
-  }
-
-  if (event.type == SDL_MOUSEMOTION) {
-    m_camera.mouseMove(mousePosition);
-  }
-  if (event.type == SDL_MOUSEBUTTONDOWN &&
-      event.button.button == SDL_BUTTON_LEFT) {
-    m_camera.mousePress(mousePosition);
-  }
-  if (event.type == SDL_MOUSEBUTTONUP &&
-      event.button.button == SDL_BUTTON_LEFT) {
-    m_camera.mouseRelease(mousePosition);
+    if ((event.key.keysym.sym == SDLK_UP) && m_verticalSpeed > 0)
+      m_verticalSpeed = 0.0f;
+    if ((event.key.keysym.sym == SDLK_DOWN) && m_verticalSpeed < 0)
+      m_verticalSpeed = 0.0f;
   }
 
   if (event.type == SDL_MOUSEWHEEL) {
@@ -130,7 +118,7 @@ void Window::onUpdate() {
   m_camera.dolly(m_dollySpeed * deltaTime);
   m_camera.truck(m_truckSpeed * deltaTime);
   m_camera.pan(m_panSpeed * deltaTime);
-  m_camera.pedestal(m_pedestalSpeed * deltaTime);
+  m_camera.vertical(m_verticalSpeed * deltaTime);
 }
 
 void Window::onPaint() {

@@ -4,41 +4,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <limits>
 
-void Camera::mouseMove(glm::ivec2 const &position) {
-  // Rotates camera by dragging mouse on the window
-  if (!m_mouseTracking)
-    return;
-
-  auto const currentPosition{project(position)};
-
-  if (m_lastPosition == currentPosition)
-    return;
-
-  // Rotation axis
-  m_axis = glm::cross(m_lastPosition, currentPosition);
-  m_axis = glm::normalize(m_axis);
-
-  // Rotation angle
-  auto const angle{glm::length(m_axis)};
-
-  // Concatenate rotation: R_old = R_new * R_old
-  m_rotation = glm::rotate(glm::mat4(1.0f), angle, m_axis) * m_rotation;
-
-  m_lastPosition = currentPosition;
-}
-
-void Camera::mousePress(glm::ivec2 const &position) {
-  // start tracking the mouse movement when left button is pressed
-  m_lastPosition = project(position);
-  m_mouseTracking = true;
-}
-
-void Camera::mouseRelease(glm::ivec2 const &position) {
-  // stop tracking the mouse moovement when left buttom is released
-  mouseMove(position);
-  m_mouseTracking = false;
-}
-
 void Camera::resizeViewport(glm::ivec2 const &size) { m_viewportSize = size; }
 
 void Camera::mouseScroll(float scroll) {
@@ -115,7 +80,7 @@ void Camera::pan(float speed) {
   computeViewMatrix();
 }
 
-void Camera::pedestal(float speed) {
+void Camera::vertical(float speed) {
   // Moves the camera vertically
   // Compute up vector
   auto const up{glm::normalize(m_up)};
