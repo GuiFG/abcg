@@ -32,10 +32,7 @@ private:
   // Matrix to change from camera space to clip space
   glm::mat4 m_projMatrix;
 
-  glm::ivec2 m_viewportSize{};
-
-  glm::vec3 m_axis{1.0f}; // axis for rotating camera when mouse is dragged
-  glm::mat4 m_rotation{1.0f}; // angle for rotating camera when mouse is dragged 
+  glm::ivec2 m_viewportSize{}; 
 
   [[nodiscard]] glm::vec3 project(glm::vec2 const &mousePosition) const;
 };

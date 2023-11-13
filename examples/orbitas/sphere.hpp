@@ -40,7 +40,6 @@ private:
   float m_translation_speed{0.1f};
   float m_rotation_angle{0.0f};
   float m_rotation_speed{1.0f};
-  glm::vec2 m_speed{0.5f, 0.0f};
 
   glm::mat4 m_modelMatrix{1.0f};
 
