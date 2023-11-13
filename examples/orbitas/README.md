@@ -169,7 +169,7 @@ private:
 
 4. ```onPaint```: Renderiza as esferas na janela.
 
-5. ```onPaintUI``:  Possui slider para controlar a velocidade de translação das esferas.
+5. ```onPaintUI```:  Possui slider para controlar a velocidade de translação das esferas.
 
 6. ```onResize```: Atualiza o tamanho do viewport ao modificar o tamanho da janela.
 
