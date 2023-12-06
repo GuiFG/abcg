@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
     window.setWindowSettings({
         .width = 800,
         .height = 800,
-        .title = "Orbita",
+        .title = "Canhão de Newton!",
     });
 
     app.run(window);

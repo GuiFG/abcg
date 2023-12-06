@@ -25,7 +25,7 @@ void Window::onEvent(SDL_Event const &event) {
       m_truckSpeed = 1.0f;
 
     if (event.key.keysym.sym == SDLK_RETURN) {
-      auto sphere = createSphere(m_translation_speed);
+      auto sphere = createSphere(m_horizontal_speed);
       m_satellites.push_back(sphere);
     }
   }
@@ -211,7 +211,7 @@ void Window::onPaint() {
 void Window::onPaintUI() {
   abcg::OpenGLWindow::onPaintUI();
 
-  ImGui::SetNextWindowPos(ImVec2(5, 100));
+  ImGui::SetNextWindowPos(ImVec2(5, 50));
   ImGui::SetNextWindowSize(ImVec2(350, -1));
   ImGui::SetNextWindowBgAlpha(0.7f);
   ImGui::Begin("Controles de Movimento", nullptr, ImGuiWindowFlags_NoResize);
@@ -219,12 +219,12 @@ void Window::onPaintUI() {
   {
     ImGui::PushItemWidth(-1);
     ImGui::PushID(1);
-    ImGui::SliderFloat("", &translation_speed, 0.0f, 100.0f,
+    ImGui::SliderFloat("", &horizontal_speed, 0.0f, 100.0f,
                        "%.1fx Velocidade horizontal");
     ImGui::PopID();
     ImGui::PopItemWidth();
 
-    m_translation_speed = gsl::narrow_cast<float>(translation_speed / 20);
+    m_horizontal_speed = gsl::narrow_cast<float>(horizontal_speed / 25);
   }
 
 

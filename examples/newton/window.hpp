@@ -34,8 +34,8 @@ private:
   float m_panSpeed{};
   float m_verticalSpeed{};
 
-  float m_translation_speed{0.0f};
-  float translation_speed{0.0f};
+  float m_horizontal_speed{0.0f};
+  float horizontal_speed{0.0f};
   int m_satellites_total{0};
 
   std::vector<Model> m_satellites;
