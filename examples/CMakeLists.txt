@@ -12,4 +12,6 @@
 # add_subdirectory(orbitas)
 #add_subdirectory(viewer2)
 #add_subdirectory(viewer3)
-add_subdirectory(viewer4)
+# add_subdirectory(viewer4)
+#add_subdirectory(viewer6)
+add_subdirectory(newton)
